@@ -1,14 +1,12 @@
-"""
-This program read the data from cloud and checks for duplicate copies in mongo DB.
-Then adds the status field for each messages and stores in mongo DB    
-
-"""
-
 import time
 import json
 import pymongo
 from azure.iot.device import IoTHubDeviceClient
+import random
+from datetime import datetime
 
+
+ggSeqName = "sequenceId"
 RECEIVED_MESSAGES = 0
 CONNECTION_STRING = "HostName=carteplus-iothub-nred.azure-devices.net;DeviceId=ckplcnred;SharedAccessKey=yE+SgpaLcuXFlNRy745eX/1pSOiw4jGro4sDCRoj/Tc="
 MONGODB_URI = "mongodb://127.0.0.1:27017/"
@@ -25,6 +23,12 @@ def message_handler(message):
     message_data = message.data.decode('utf-8') 
     data_json = json.loads(message_data) 
     data_json['status'] = "Received from cloud"
+    seq = globals().get(ggSeqName) or random.randint(0, 1000000000)
+    seq = seq + 1
+    globals()[ggSeqName] = seq
+    data_json['seq']= seq
+    current_datetime = datetime.now()
+    data_json['timestamp'] = current_datetime.strftime("%d/%m/%Y , %I:%M:%S %p") 
     #print(json.dumps(data_json, indent=4))  
     
     try:
